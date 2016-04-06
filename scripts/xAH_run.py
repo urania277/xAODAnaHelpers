@@ -125,35 +125,12 @@ drivers_common.add_argument('--optBatchWait', action='store_true', required=Fals
 
 # then the drivers we provide support for
 drivers_parser = parser.add_subparsers(prog='xAH_run.py', title='drivers', dest='driver', description='specify where to run jobs')
-direct = drivers_parser.add_parser('direct',
-                                   help='Run your jobs locally.',
-                                   usage=baseUsageStr.format('direct'),
-                                   formatter_class=lambda prog: CustomFormatter(prog, max_help_position=30),
-                                   parents=[drivers_common])
-
-prooflite = drivers_parser.add_parser('prooflite',
-                                      help='Run your jobs using ProofLite',
-                                      usage=baseUsageStr.format('prooflite'),
-                                      formatter_class=lambda prog: CustomFormatter(prog, max_help_position=30),
-                                      parents=[drivers_common])
-
-prun = drivers_parser.add_parser('prun',
-                                 help='Run your jobs on the grid using prun. Use prun --help for descriptions of the options.',
-                                 usage=baseUsageStr.format('prun'),
-                                 formatter_class=lambda prog: CustomFormatter(prog, max_help_position=30),
-                                 parents=[drivers_common])
-
-condor = drivers_parser.add_parser('condor',
-                                   help='Flock your jobs to condor',
-                                   usage=baseUsageStr.format('condor'),
-                                   formatter_class=lambda prog: CustomFormatter(prog, max_help_position=30),
-                                   parents=[drivers_common])
-
-lsf = drivers_parser.add_parser('lsf',
-                                help='Flock your jobs to lsf',
-                                usage=baseUsageStr.format('lsf'),
-                                formatter_class=lambda prog: CustomFormatter(prog, max_help_position=30),
-                                parents=[drivers_common])
+direct = drivers_parser.add_parser('direct', help='Run your jobs locally.', usage=baseUsageStr.format('direct'), formatter_class=lambda prog: CustomFormatter(prog, max_help_position=30), parents=[drivers_common])
+prooflite = drivers_parser.add_parser('prooflite', help='Run your jobs using ProofLite', usage=baseUsageStr.format('prooflite'), formatter_class=lambda prog: CustomFormatter(prog, max_help_position=30), parents=[drivers_common])
+prun = drivers_parser.add_parser('prun', help='Run your jobs on the grid using prun. Use prun --help for descriptions of the options.', usage=baseUsageStr.format('prun'), formatter_class=lambda prog: CustomFormatter(prog, max_help_position=30), parents=[drivers_common])
+condor = drivers_parser.add_parser('condor', help='Flock your jobs to condor', usage=baseUsageStr.format('condor'), formatter_class=lambda prog: CustomFormatter(prog, max_help_position=30), parents=[drivers_common])
+lsf = drivers_parser.add_parser('lsf', help='Flock your jobs to lsf', usage=baseUsageStr.format('lsf'), formatter_class=lambda prog: CustomFormatter(prog, max_help_position=30), parents=[drivers_common])
+local = drivers_parser.add_parser('local', help='Run your jobs locally.', usage=driverUsageStr.format('local'), formatter_class=lambda prog: CustomFormatter(prog, max_help_position=30))
 
 # define arguments for prooflite driver
 prooflite.add_argument('--optPerfTree',          metavar='', type=int, required=False, default=None, help='the option to turn on the performance tree in PROOF.  if this is set to 1, it will write out the tree')
@@ -282,6 +259,9 @@ if __name__ == "__main__":
     elif args.driver == 'lsf':
       if getattr(ROOT.EL, 'LSFDriver') is None:
         raise KeyError('Cannot load the LSF driver from EventLoop. Did you not compile it?')
+    elif args.driver == 'local':
+      if getattr(ROOT.EL, 'LocalDriver') is None:
+        raise KeyError('Cannot load the Local driver from EventLoop. Did you not compile it?')
 
     # create a new sample handler to describe the data files we use
     xAH_logger.info("creating new sample handler")
@@ -576,8 +556,24 @@ if __name__ == "__main__":
         getattr(driver.options(), setter)(getattr(ROOT.EL.Job, opt), getattr(args, opt))
         xAH_logger.info("\t - driver.options().{0:s}({1:s}, {2})".format(setter, getattr(ROOT.EL.Job, opt), getattr(args, opt)))
 
+    elif (args.driver == "local"):
+      driver = ROOT.EL.LocalDriver()
+      for opt, t in map(lambda x: (x.dest, x.type), local._actions):
+        if getattr(args, opt) is None: continue  # skip if not set
+        if opt in ['help', 'optBatchWait']: continue  # skip some options
+        if t in [float]:
+          setter = 'setDouble'
+        elif t in [int]:
+          setter = 'setInteger'
+        elif t in [bool]:
+          setter = 'setBool'
+        else:
+          setter = 'setString'
+        getattr(driver.options(), setter)(getattr(ROOT.EL.Job, opt), getattr(args, opt))
+        xAH_logger.info("\t - driver.options().{0:s}({1:s}, {2})".format(setter, getattr(ROOT.EL.Job, opt), getattr(args, opt)))
+
     xAH_logger.info("\tsubmit job")
-    if args.driver in ["prun","lsf", "condor"] and not args.optBatchWait:
+    if args.driver in ["prun","lsf", "condor","local"] and not args.optBatchWait:
       driver.submitOnly(job, args.submit_dir)
     else:
       driver.submit(job, args.submit_dir)
