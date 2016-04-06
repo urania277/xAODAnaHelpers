@@ -130,7 +130,7 @@ prooflite = drivers_parser.add_parser('prooflite', help='Run your jobs using Pro
 prun = drivers_parser.add_parser('prun', help='Run your jobs on the grid using prun. Use prun --help for descriptions of the options.', usage=baseUsageStr.format('prun'), formatter_class=lambda prog: CustomFormatter(prog, max_help_position=30), parents=[drivers_common])
 condor = drivers_parser.add_parser('condor', help='Flock your jobs to condor', usage=baseUsageStr.format('condor'), formatter_class=lambda prog: CustomFormatter(prog, max_help_position=30), parents=[drivers_common])
 lsf = drivers_parser.add_parser('lsf', help='Flock your jobs to lsf', usage=baseUsageStr.format('lsf'), formatter_class=lambda prog: CustomFormatter(prog, max_help_position=30), parents=[drivers_common])
-local = drivers_parser.add_parser('local', help='Run your jobs locally.', usage=driverUsageStr.format('local'), formatter_class=lambda prog: CustomFormatter(prog, max_help_position=30))
+local = drivers_parser.add_parser('local', help='Run your jobs locally.', usage=baseUsageStr.format('local'), formatter_class=lambda prog: CustomFormatter(prog, max_help_position=30), parents=[drivers_common])
 
 # define arguments for prooflite driver
 prooflite.add_argument('--optPerfTree',          metavar='', type=int, required=False, default=None, help='the option to turn on the performance tree in PROOF.  if this is set to 1, it will write out the tree')
