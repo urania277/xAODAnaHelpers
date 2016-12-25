@@ -33,6 +33,8 @@
 // this is needed to distribute the algorithm to the workers
 ClassImp(JetSelector)
 
+std::vector<std::string> errorMessages; // ridiculous hack by CWK
+std::vector<int> errorMessagesCount; // ridiculous hack by CWK
 
 JetSelector :: JetSelector (std::string className) :
     Algorithm(className),
@@ -492,13 +494,15 @@ bool JetSelector :: executeSelection ( const xAOD::JetContainer* inJets,
   int nPass(0); int nObj(0);
   bool passEventClean(true);
 
-  static SG::AuxElement::Accessor< char > isCleanAcc("cleanJet");
+  // static SG::AuxElement::Accessor< char > isCleanAcc("cleanJet");
+  static SG::AuxElement::Accessor< int > isCleanAcc("cleanJet");
 
   //
   // This cannot be static as multiple instance of Jet Selector would
   //   then share the same passSelDecor, including the m_decor name
   //
-  SG::AuxElement::Decorator< char > passSelDecor( m_decor );
+  // SG::AuxElement::Decorator< char > passSelDecor( m_decor );
+  SG::AuxElement::Decorator< int > passSelDecor( m_decor );
 
   for ( auto jet_itr : *inJets ) { // duplicated of basic loop
 
@@ -600,7 +604,13 @@ bool JetSelector :: executeSelection ( const xAOD::JetContainer* inJets,
            float jvtSF(1.0);
 	   if ( jet->pt() < m_pt_max_JVT && fabs(jet->eta()) < m_eta_max_JVT ) {
              if ( m_JVT_tool_handle->getEfficiencyScaleFactor( *jet, jvtSF ) != CP::CorrectionCode::Ok ) {
-               Warning( "executeSelection()", "Problem in JVT Tool getEfficiencyScaleFactor");
+	       // Warning( "executeSelection()", "Problem in JVT Tool getEfficiencyScaleFactor");  // added below as want to save output...
+               if(std::find(errorMessages.begin(), errorMessages.end(), "Problem in JVT Tool getEfficiencyScaleFactor") != errorMessages.end()) {
+		 errorMessagesCount[0] += 1;
+	       } else {
+		 errorMessages.push_back("Problem in JVT Tool getEfficiencyScaleFactor");
+		 errorMessagesCount.push_back(1);
+	       }
                jvtSF = 1.0;
              }
 	   }
@@ -697,12 +707,18 @@ EL::StatusCode JetSelector :: finalize ()
   if(m_debug) Info("finalize()", "%s", m_name.c_str());
 
   if ( m_useCutFlow ) {
-    if(m_debug) Info("histFinalize()", "Filling cutflow");
+    if(m_debug) Info("finalize()", "Filling cutflow"); // cwk changed from histFinalize()
     m_cutflowHist ->SetBinContent( m_cutflow_bin, m_numEventPass        );
     m_cutflowHistW->SetBinContent( m_cutflow_bin, m_weightNumEventPass  );
   }
 
   if ( m_BJetSelectTool ) { m_BJetSelectTool = nullptr; delete m_BJetSelectTool; }
+
+  // cwk error messages hack
+  for (unsigned int i=0; i<errorMessages.size(); i++) {
+    Warning("finalize()", "The following messages were recorded but manually suppressed:");
+    std::cout<<"  "<<errorMessagesCount[i]<<" times: "<<errorMessages[i]<<std::endl;
+  }
 
   return EL::StatusCode::SUCCESS;
 }
@@ -732,6 +748,16 @@ int JetSelector :: PassCuts( const xAOD::Jet* jet ) {
 
   // fill cutflow bin 'all' before any cut
   if(m_useCutFlow) m_jet_cutflowHist_1->Fill( m_jet_cutflow_all, 1 );
+
+  // clean jets
+  // static SG::AuxElement::Accessor< char > isCleanAcc("cleanJet");
+  static SG::AuxElement::Accessor< int > isCleanAcc("cleanJet");
+  if ( m_cleanJets ) {
+    if ( isCleanAcc.isAvailable( *jet ) ) {
+      if ( !isCleanAcc( *jet ) ) { return 0; }
+    }
+  }
+  if(m_useCutFlow) m_jet_cutflowHist_1->Fill( m_jet_cutflow_cleaning_cut, 1 );
 
   // pT
   if ( m_pT_max != 1e8 ) {
@@ -875,14 +901,16 @@ int JetSelector :: PassCuts( const xAOD::Jet* jet ) {
   //  Pass Keys
   //
   for ( auto& passKey : m_passKeys ) {
-    if ( !(jet->auxdata< char >(passKey) == '1') ) { return 0;}
+    // if ( !(jet->auxdata< char >(passKey) == '1') ) { return 0;}
+    if ( !(jet->auxdata< int >(passKey) == 1) ) { return 0;}
   }
 
   //
   //  Fail Keys
   //
   for ( auto& failKey : m_failKeys ){
-    if ( !(jet->auxdata< char >(failKey) == '0') ) { return 0;}
+    // if ( !(jet->auxdata< char >(failKey) == '0') ) { return 0;}
+    if ( !(jet->auxdata< int >(failKey) == 0) ) { return 0;}
   }
 
   //
