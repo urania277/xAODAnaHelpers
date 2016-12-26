@@ -34,6 +34,8 @@ JetContainer::JetContainer(const std::string& name, const std::string& detailStr
     m_LeadingClusterSecondLambda=new std::vector<float>();
     m_LeadingClusterCenterLambda=new std::vector<float>();
     m_LeadingClusterSecondR     =new std::vector<float>();
+    m_clean_passLooseBadTrigger        =new std::vector<int>();
+    m_clean_passLooseBadTriggerUgly    =new std::vector<int>();
     m_clean_passLooseBad        =new std::vector<int>();
     m_clean_passLooseBadUgly    =new std::vector<int>();
     m_clean_passTightBad        =new std::vector<int>();
@@ -365,6 +367,8 @@ JetContainer::~JetContainer()
     delete m_LeadingClusterSecondR;
     delete m_clean_passLooseBad;
     delete m_clean_passLooseBadUgly;
+    delete m_clean_passLooseBadTrigger;
+    delete m_clean_passLooseBadTriggerUgly;
     delete m_clean_passTightBad;
     delete m_clean_passTightBadUgly;
   }
@@ -705,6 +709,8 @@ void JetContainer::setTree(TTree *tree, std::string tagger)
       connectBranch<float>(tree, "LeadingClusterSecondLambda", &m_LeadingClusterSecondLambda);
       connectBranch<float>(tree, "LeadingClusterCenterLambda", &m_LeadingClusterCenterLambda);
       connectBranch<float>(tree, "LeadingClusterSecondR",      &m_LeadingClusterSecondR);
+      connectBranch<int>  (tree, "clean_passLooseBadTrigger",         &m_clean_passLooseBadTrigger);
+      connectBranch<int>  (tree, "clean_passLooseBadTriggerUgly",     &m_clean_passLooseBadTriggerUgly);
       connectBranch<int>  (tree, "clean_passLooseBad",         &m_clean_passLooseBad);
       connectBranch<int>  (tree, "clean_passLooseBadUgly",     &m_clean_passLooseBadUgly);
       connectBranch<int>  (tree, "clean_passTightBad",         &m_clean_passTightBad);
@@ -927,6 +933,8 @@ void JetContainer::updateParticle(uint idx, Jet& jet)
       jet.LeadingClusterSecondLambda=m_LeadingClusterSecondLambda->at(idx);
       jet.LeadingClusterCenterLambda=m_LeadingClusterCenterLambda->at(idx);
       jet.LeadingClusterSecondR     =m_LeadingClusterSecondR     ->at(idx);
+      jet.clean_passLooseBadTrigger        =m_clean_passLooseBadTrigger        ->at(idx);
+      jet.clean_passLooseBadTriggerUgly    =m_clean_passLooseBadTriggerUgly    ->at(idx);
       jet.clean_passLooseBad        =m_clean_passLooseBad        ->at(idx);
       jet.clean_passLooseBadUgly    =m_clean_passLooseBadUgly    ->at(idx);
       jet.clean_passTightBad        =m_clean_passTightBad        ->at(idx);
@@ -1198,6 +1206,8 @@ void JetContainer::setBranches(TTree *tree)
     setBranch<float>(tree,"LeadingClusterSecondLambda",    m_LeadingClusterSecondLambda  	  );
     setBranch<float>(tree,"LeadingClusterCenterLambda",    m_LeadingClusterCenterLambda  	  );
     setBranch<float>(tree,"LeadingClusterSecondR",         m_LeadingClusterSecondR  	      );
+    setBranch<int>  (tree,"clean_passLooseBadTrigger",            m_clean_passLooseBadTrigger             );
+    setBranch<int>  (tree,"clean_passLooseBadTriggerUgly",        m_clean_passLooseBadTriggerUgly         );
     setBranch<int>  (tree,"clean_passLooseBad",            m_clean_passLooseBad             );
     setBranch<int>  (tree,"clean_passLooseBadUgly",        m_clean_passLooseBadUgly         );
     setBranch<int>  (tree,"clean_passTightBad",            m_clean_passTightBad             );
@@ -1543,6 +1553,8 @@ void JetContainer::clear()
     m_LeadingClusterSecondLambda->clear();
     m_LeadingClusterCenterLambda->clear();
     m_LeadingClusterSecondR     ->clear();
+    m_clean_passLooseBadTrigger        ->clear();
+    m_clean_passLooseBadTriggerUgly    ->clear();
     m_clean_passLooseBad        ->clear();
     m_clean_passLooseBadUgly    ->clear();
     m_clean_passTightBad        ->clear();
@@ -1912,6 +1924,14 @@ void JetContainer::FillJet( const xAOD::IParticle* particle, const xAOD::Vertex*
     // safeFill<char, int, xAOD::Jet>(jet, clean_passLooseBadUgly, m_clean_passLooseBadUgly, -999);
     static SG::AuxElement::ConstAccessor<int> clean_passLooseBadUgly ("clean_passLooseBadUgly");
     safeFill<int, int, xAOD::Jet>(jet, clean_passLooseBadUgly, m_clean_passLooseBadUgly, -999);
+
+    // static SG::AuxElement::ConstAccessor<char> clean_passLooseBad ("clean_passLooseBad");
+    // safeFill<char, int, xAOD::Jet>(jet, clean_passLooseBad, m_clean_passLooseBad, -999);
+    static SG::AuxElement::ConstAccessor<int> clean_passLooseBadTrigger ("clean_passLooseBadTrigger");
+    safeFill<int, int, xAOD::Jet>(jet, clean_passLooseBadTrigger, m_clean_passLooseBadTrigger, -999);
+
+    static SG::AuxElement::ConstAccessor<int> clean_passLooseBadTriggerUgly ("clean_passLooseBadTriggerUgly");
+    safeFill<int, int, xAOD::Jet>(jet, clean_passLooseBadTriggerUgly, m_clean_passLooseBadTriggerUgly, -999);
 
     // static SG::AuxElement::ConstAccessor<char> clean_passTightBad ("clean_passTightBad");
     // safeFill<char, int, xAOD::Jet>(jet, clean_passTightBad, m_clean_passTightBad, -999);
