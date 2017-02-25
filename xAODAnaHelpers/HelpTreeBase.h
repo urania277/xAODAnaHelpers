@@ -390,4 +390,3 @@ void HelpTreeBase::setBranch(std::string prefix, std::string varName, std::vecto
 
 #endif
 
-// comment for git
