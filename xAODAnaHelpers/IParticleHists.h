@@ -64,6 +64,7 @@ class IParticleHists : public HistogramManager
     std::vector< TH1F* > m_NPt;       //!
     std::vector< TH1F* > m_NPt_m;       //!
     std::vector< TH1F* > m_NPt_s;       //!
+    std::vector< TH1F* > m_NPt_f;       //!
     std::vector< TH1F* > m_NEta;      //!
     std::vector< TH1F* > m_NPhi;      //!
     std::vector< TH1F* > m_NM;        //!
@@ -74,6 +75,11 @@ class IParticleHists : public HistogramManager
     std::vector< TH1F* > m_NEt;       //!
     std::vector< TH1F* > m_NEt_m;       //!
     std::vector< TH1F* > m_NEt_s;       //!
+
+    // TLA
+    TH1F* m_mjj;                  //!
+    TH1F* m_yStar;                //!
+
 };
 
 
@@ -106,6 +112,9 @@ StatusCode IParticleHists::execute( const xAH::ParticleContainer<T_PARTICLE, T_I
 	m_NEt_s.at(iParticle)->        Fill( partP4.Et(),   eventWeight);
       }
 
+      if(m_infoSwitch->m_TLA){
+        m_NPt_f.at(iParticle)->        Fill( partP4.Pt(),   eventWeight);
+      }
     }
   }
 

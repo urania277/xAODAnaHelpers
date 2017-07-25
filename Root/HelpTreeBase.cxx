@@ -175,6 +175,8 @@ void HelpTreeBase::AddTrigger( const std::string detailStr ) {
 // Fill the information in the trigger branches
 void HelpTreeBase::FillTrigger( const xAOD::EventInfo* eventInfo ) {
 
+  // m_debug = true;
+
   if ( m_debug ) { Info("HelpTreeBase::FillTrigger()", "Filling trigger info"); }
 
   // Clear previous events
@@ -225,6 +227,12 @@ void HelpTreeBase::FillTrigger( const xAOD::EventInfo* eventInfo ) {
     static SG::AuxElement::ConstAccessor< std::vector< float > > trigPrescales("triggerPrescales");
     if( trigPrescales.isAvailable( *eventInfo ) ) { m_triggerPrescales = trigPrescales( *eventInfo ); }
 
+    if(m_debug) {
+      std::cout << m_passTriggers.size() << " passed triggers:" << std::endl;
+      for(unsigned int i=0; i<m_passTriggers.size(); i++){
+        std::cout << i << " " << m_passTriggers.at(i) << std::endl;
+      }
+    }
   }
 
   if ( m_trigInfoSwitch->m_passTrigBits ) {

@@ -119,6 +119,8 @@ namespace HelperClasses{
 	    break;
 	  }
       }
+
+    m_TLA           = has_exact("TLA");
   }
 
   void MuonInfoSwitch::initialize(){
@@ -315,6 +317,10 @@ namespace HelperClasses{
     } // sfFTagFlt
     m_area          = has_exact("area");
     m_JVC           = has_exact("JVC");
+    
+    // add TLA plots
+    m_TLA           = has_exact("TLA");
+    
   }
 
   void TruthInfoSwitch::initialize(){

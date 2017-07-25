@@ -81,10 +81,19 @@ StatusCode IParticleHists::initialize() {
 	m_NEt_s.push_back(       book(m_name, (m_prefix+"Et_s_"+pNum.str()),       pTitle.str()+" "+m_title+" E_{T} [GeV]" ,100,            0,       100. ) );
       }
 
+      if(m_infoSwitch->m_TLA) {
+        m_NPt_f.push_back(       book(m_name, (m_prefix+"Pt_f_"+pNum.str()),       pTitle.str()+" "+m_title+" p_{T} [GeV]" ,3000,            0,       3000. ) );
+      }
+
       pNum.str("");
       pTitle.str("");
 
     }//for iParticle
+  }
+
+  if( m_infoSwitch->m_TLA ) {
+    m_mjj        = book(m_name, "mjj", "m_{jj} [GeV]", 5000, 0, 5000);
+    m_yStar      = book(m_name, "yStar", "yStar", 120, -3, 3);
   }
 
   return StatusCode::SUCCESS;
@@ -115,7 +124,26 @@ StatusCode IParticleHists::execute( const xAOD::IParticleContainer* particles, f
 	m_NEt_s.at(iParticle)->        Fill( et,   eventWeight);
       }
 
+      // fine-binned pt hists
+      if(m_infoSwitch->m_TLA){
+        m_NPt_f.at(iParticle)->        Fill( particles->at(iParticle)->pt()/1e3,   eventWeight);
+      }
     }
+  }
+
+  // other TLA hists
+  if(m_infoSwitch->m_TLA){
+    // I am going to assume that there are two jets
+    if( (int)particles->size() < 2 ) {
+      std::cout << "WARNING    IParticleHists::execute()   Need at least two jets for TLA" << std::endl;
+      return StatusCode::SUCCESS;
+    }
+    TLorentzVector jet0, jet1;
+    jet0.SetPtEtaPhiE(particles->at(0)->pt()/1e3, particles->at(0)->eta(), particles->at(0)->phi(), particles->at(0)->e()/1e3);
+    jet1.SetPtEtaPhiE(particles->at(1)->pt()/1e3, particles->at(1)->eta(), particles->at(1)->phi(), particles->at(1)->e()/1e3);
+
+    m_mjj -> Fill ((jet0 + jet1).M(), eventWeight);
+    m_yStar -> Fill ((jet0.Eta() - jet1.Eta())*0.5, eventWeight);
   }
 
   return StatusCode::SUCCESS;

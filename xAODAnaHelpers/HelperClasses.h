@@ -210,6 +210,7 @@ namespace HelperClasses {
         ============== ============ =======
         m_kinematic    kinematic    exact
         m_numLeading   NLeading     partial
+        m_TLA          TLA          exact
         ============== ============ =======
 
         .. note::
@@ -227,6 +228,7 @@ namespace HelperClasses {
   public:
     bool m_kinematic;
     int  m_numLeading;
+    bool m_TLA;
     IParticleInfoSwitch(const std::string configStr) : InfoSwitch(configStr) { initialize(); }
     virtual ~IParticleInfoSwitch() {}
   protected:
@@ -398,6 +400,7 @@ namespace HelperClasses {
         m_sfFTagFlt      sfFTagFlt      partial
         m_area           area           exact
         m_JVC            JVC            exact
+        m_TLA            TLA            exact
         m_tracksInJet    tracksInJet    partial
         m_trackJetName   trackJetName   partial
         m_hltVtxComp     hltVtxComp     exact
@@ -455,6 +458,7 @@ namespace HelperClasses {
     bool m_byAverageMu;
     bool m_area;
     bool m_JVC;
+    bool m_TLA;
     std::string      m_trackName;
     std::string      m_trackJetName;
     std::vector<int> m_sfFTagFix;
