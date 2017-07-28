@@ -26,6 +26,10 @@ public:
   /** Histogram xaxis title when using IParticleHistsAlgo directly */
   std::string m_histTitle;
 
+  /* TLA-defined variables - probably I should have a new algo inheriting from this... */
+  std::string m_leadPtCuts;
+  std::string m_subleadPtCuts;
+
 private:
   std::map< std::string, IParticleHists* > m_plots; //!
 

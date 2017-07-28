@@ -80,6 +80,11 @@ class IParticleHists : public HistogramManager
     TH1F* m_mjj;                  //!
     TH1F* m_yStar;                //!
 
+    // for each pt0, pt1, yStar, mjj region
+    std::vector< TH1F* > m_regions_mjj;        //!
+    std::vector< TH1F* > m_regions_yStar;      //!
+    std::vector< TH1F* > m_regions_Pt_lead;    //!
+    std::vector< TH1F* > m_regions_Pt_sublead; //!
 };
 
 

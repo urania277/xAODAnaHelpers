@@ -1,6 +1,15 @@
 #include <xAODAnaHelpers/IParticleHists.h>
 #include <sstream>
 
+namespace util {
+  template <typename T> std::string to_string(const T& t) {
+    std::string str{std::to_string (t)};
+    int offset{1};
+    if (str.find_last_not_of('0') == str.find('.')) { offset = 0; }
+    str.erase(str.find_last_not_of('0') + offset, std::string::npos);
+    return str;
+  }
+}
 
 using std::vector;
 
@@ -14,6 +23,13 @@ IParticleHists :: IParticleHists (std::string name, std::string detailStr, std::
 
 IParticleHists :: ~IParticleHists () {
   if(m_infoSwitch) delete m_infoSwitch;
+}
+
+void trimString(std::string &s) {
+  int offset = 1;
+  if (s.find_last_not_of('0') == s.find('.'))
+    offset = 0;
+  s.erase(s.find_last_not_of('0') + offset, std::string::npos);
 }
 
 StatusCode IParticleHists::initialize() {
@@ -48,7 +64,7 @@ StatusCode IParticleHists::initialize() {
     std::stringstream pTitle;
     for(int iParticle=0; iParticle < m_infoSwitch->m_numLeading; ++iParticle){
       pNum << iParticle;
-
+      
       pTitle << iParticle+1;
       switch(iParticle)
 	{
@@ -65,7 +81,7 @@ StatusCode IParticleHists::initialize() {
 	  pTitle << "^{th}";
 	  break;
 	}
-
+      
       m_NPt_l.push_back(       book(m_name, (m_prefix+"Pt_l_"+pNum.str()),       pTitle.str()+" "+m_title+" p_{T} [GeV]" ,120,            0,       3000. ) );
       m_NPt .push_back(       book(m_name, (m_prefix+"Pt_"+pNum.str()),       pTitle.str()+" "+m_title+" p_{T} [GeV]" ,100,            0,       1000. ) );
       m_NPt_m.push_back(       book(m_name, (m_prefix+"Pt_m_"+pNum.str()),       pTitle.str()+" "+m_title+" p_{T} [GeV]" ,100,            0,       500. ) );
@@ -80,20 +96,49 @@ StatusCode IParticleHists::initialize() {
 	m_NEt_m.push_back(       book(m_name, (m_prefix+"Et_m_"+pNum.str()),       pTitle.str()+" "+m_title+" E_{T} [GeV]" ,100,            0,       500. ) );
 	m_NEt_s.push_back(       book(m_name, (m_prefix+"Et_s_"+pNum.str()),       pTitle.str()+" "+m_title+" E_{T} [GeV]" ,100,            0,       100. ) );
       }
-
+      
       if(m_infoSwitch->m_TLA) {
-        m_NPt_f.push_back(       book(m_name, (m_prefix+"Pt_f_"+pNum.str()),       pTitle.str()+" "+m_title+" p_{T} [GeV]" ,3000,            0,       3000. ) );
+        m_NPt_f.push_back(       book(m_name, "TLA_noExtraSel/Pt_f_"+pNum.str(),       pTitle.str()+" "+m_title+" p_{T} [GeV]" ,3000,            0,       3000. ) );
       }
-
+      
       pNum.str("");
       pTitle.str("");
 
     }//for iParticle
-  }
+}
 
-  if( m_infoSwitch->m_TLA ) {
-    m_mjj        = book(m_name, "mjj", "m_{jj} [GeV]", 5000, 0, 5000);
-    m_yStar      = book(m_name, "yStar", "yStar", 120, -3, 3);
+if( m_infoSwitch->m_TLA ) {
+    m_mjj        = book(m_name, "TLA_noExtraSel/mjj", "m_{jj} [GeV]", 5000, 0, 5000);
+    m_yStar      = book(m_name, "TLA_noExtraSel/yStar", "yStar", 120, -3, 3);
+
+    // book histograms for all the TLA regions
+    for(auto leadPt : m_infoSwitch->m_TLA_leadPts) {
+      for(auto subleadPt : m_infoSwitch->m_TLA_subleadPts) {
+        for(auto mjj : m_infoSwitch->m_TLA_mjjs) {
+          for(auto yStar : m_infoSwitch->m_TLA_yStars) {
+            std::string regionName = "TLA_pTlead" + util::to_string(leadPt) + 
+              "_pTsublead" + util::to_string(subleadPt) +
+              "_mjj" + util::to_string(mjj) +
+              "_yStar" + util::to_string(yStar);
+            m_regions_mjj.push_back( book(m_name, regionName+"/mjj", "m_{jj} [GeV]", 5000, 0, 5000) );
+            m_regions_Pt_lead.push_back( book(m_name, regionName+"/pTlead", "1^{st} jet p_{T} [GeV]", 3000, 0, 3000) );
+            m_regions_Pt_sublead.push_back( book(m_name, regionName+"/pTsublead", "2^{nd} jet p_{T} [GeV]", 3000, 0, 3000) );
+            m_regions_yStar.push_back( book(m_name, regionName+"/yStar", "yStar", 120, -3, 3) );
+          }
+          for(auto yStarAnti : m_infoSwitch->m_TLA_yStarAntis) {
+            std::string regionName = "TLA_pTlead" + util::to_string(leadPt) + 
+              "_pTsublead" + util::to_string(subleadPt) +
+              "_mjj" + util::to_string(mjj) +
+              "_yStarAnti" + util::to_string(yStarAnti);
+            m_regions_mjj.push_back( book(m_name, regionName+"/mjj", "m_{jj} [GeV]", 5000, 0, 5000) );
+            m_regions_Pt_lead.push_back( book(m_name, regionName+"/pTlead", "1^{st} jet p_{T} [GeV]", 3000, 0, 3000) );
+            m_regions_Pt_sublead.push_back( book(m_name, regionName+"/pTsublead", "2^{nd} jet p_{T} [GeV]", 3000, 0, 3000) );
+            m_regions_yStar.push_back( book(m_name, regionName+"/yStar", "yStar", 120, -3, 3) );
+          }
+        }
+      }
+    }
+
   }
 
   return StatusCode::SUCCESS;
@@ -142,8 +187,49 @@ StatusCode IParticleHists::execute( const xAOD::IParticleContainer* particles, f
     jet0.SetPtEtaPhiE(particles->at(0)->pt()/1e3, particles->at(0)->eta(), particles->at(0)->phi(), particles->at(0)->e()/1e3);
     jet1.SetPtEtaPhiE(particles->at(1)->pt()/1e3, particles->at(1)->eta(), particles->at(1)->phi(), particles->at(1)->e()/1e3);
 
-    m_mjj -> Fill ((jet0 + jet1).M(), eventWeight);
-    m_yStar -> Fill ((jet0.Eta() - jet1.Eta())*0.5, eventWeight);
+    double thismjj = (jet0 + jet1).M();
+    double thisyStar = (jet0.Eta() - jet1.Eta())*0.5;
+    m_mjj -> Fill (thismjj, eventWeight);
+    m_yStar -> Fill (thisyStar, eventWeight);
+
+    // fill TLA region hists
+    int i = 0;
+    for(auto leadPt : m_infoSwitch->m_TLA_leadPts) {
+      for(auto subleadPt : m_infoSwitch->m_TLA_subleadPts) {
+        for(auto mjj : m_infoSwitch->m_TLA_mjjs) {
+          for(auto yStar : m_infoSwitch->m_TLA_yStars) {
+            if( jet0.Pt() > leadPt &&
+                jet1.Pt() > subleadPt &&
+                thismjj > mjj &&
+                fabs(thisyStar) < yStar ) {
+              m_regions_mjj.at(i) -> Fill(thismjj, eventWeight);
+              m_regions_yStar.at(i) -> Fill(thisyStar, eventWeight);
+              m_regions_Pt_lead.at(i) -> Fill(jet0.Pt(), eventWeight);
+              m_regions_Pt_sublead.at(i) -> Fill(jet1.Pt(), eventWeight);
+            }
+            i++;
+          }
+          for(auto yStarAnti : m_infoSwitch->m_TLA_yStarAntis) {
+            if( jet0.Pt() > leadPt &&
+                jet1.Pt() > subleadPt &&
+                thismjj > mjj &&
+                fabs(thisyStar) > yStarAnti ) {
+              m_regions_mjj.at(i) -> Fill(thismjj, eventWeight);
+              m_regions_yStar.at(i) -> Fill(thisyStar, eventWeight);
+              m_regions_Pt_lead.at(i) -> Fill(jet0.Pt(), eventWeight);
+              m_regions_Pt_sublead.at(i) -> Fill(jet1.Pt(), eventWeight);
+            }
+            i++;
+          }
+        }
+      }
+    }
+
+    // for(int i = 0; i < m_regions_mjj.size(); i++) {
+      // m_regions_mjj.at(i) -> Fill(mjj, eventWeight);
+      // add others
+    // }
+
   }
 
   return StatusCode::SUCCESS;

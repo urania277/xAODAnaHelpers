@@ -107,6 +107,23 @@ namespace HelperClasses{
     m_clean         = has_exact("clean");
   }
 
+  std::vector<float> commaListToVecFloat(std::string input) {
+    std::stringstream ss( input );
+    std::vector<std::string> stringVals;
+    while( ss.good() )
+      {
+        std::string substr;
+        getline( ss, substr, ',' );
+        stringVals.push_back( substr );
+      }
+    std::vector<float> output;
+    for(auto stringVal : stringVals) {
+      output.push_back( std::atof(stringVal.c_str()) );
+    }
+
+    return output;
+  }
+
   void IParticleInfoSwitch::initialize(){
     m_kinematic     = has_exact("kinematic");
 
@@ -121,6 +138,34 @@ namespace HelperClasses{
       }
 
     m_TLA           = has_exact("TLA");
+    
+    // "leadPt185,195 subleadPt85 yStar03,06 yStarAnti03,06 mjj"
+    for(auto configDetail : m_configDetails)
+      {
+	if( configDetail.compare(0,9,"yStarAnti")==0 )
+          m_TLA_yStarAntis = commaListToVecFloat(configDetail.substr(9, std::string::npos));
+        else if( configDetail.compare(0,5,"yStar")==0 )
+          m_TLA_yStars = commaListToVecFloat(configDetail.substr(5, std::string::npos));
+        if( configDetail.compare(0,9,"subleadPt")==0 )
+          m_TLA_subleadPts = commaListToVecFloat(configDetail.substr(9, std::string::npos));
+        else if( configDetail.compare(0,6,"leadPt")==0 )
+          m_TLA_leadPts = commaListToVecFloat(configDetail.substr(6, std::string::npos));
+        if( configDetail.compare(0,3,"mjj")==0 )
+          m_TLA_mjjs = commaListToVecFloat(configDetail.substr(3, std::string::npos));
+      }
+
+    std::cout << "IParticleInfoSwitch::initialize - I have read in the following:" << std::endl;
+    std::cout << "leadPts:" << std::endl;
+    for(auto leadPt : m_TLA_leadPts) std::cout << "  " << leadPt << std::endl;
+    std::cout << "subleadPts:" << std::endl;
+    for(auto subleadPt : m_TLA_subleadPts) std::cout << "  " << subleadPt << std::endl;
+    std::cout << "yStars:" << std::endl;
+    for(auto yStar : m_TLA_yStars) std::cout << "  " << yStar << std::endl;
+    std::cout << "yStarAntis:" << std::endl;
+    for(auto yStarAnti : m_TLA_yStarAntis) std::cout << "  " << yStarAnti << std::endl;
+    std::cout << "mjjs:" << std::endl;
+    for(auto mjj : m_TLA_mjjs) std::cout << "  " << mjj << std::endl;
+
   }
 
   void MuonInfoSwitch::initialize(){

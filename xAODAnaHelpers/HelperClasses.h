@@ -229,6 +229,12 @@ namespace HelperClasses {
     bool m_kinematic;
     int  m_numLeading;
     bool m_TLA;
+    std::vector<float> m_TLA_yStarAntis;
+    std::vector<float> m_TLA_yStars;
+    std::vector<float> m_TLA_leadPts;
+    std::vector<float> m_TLA_subleadPts;
+    std::vector<float> m_TLA_mjjs;
+
     IParticleInfoSwitch(const std::string configStr) : InfoSwitch(configStr) { initialize(); }
     virtual ~IParticleInfoSwitch() {}
   protected:
