@@ -105,9 +105,10 @@ StatusCode IParticleHists::initialize() {
       pTitle.str("");
 
     }//for iParticle
-}
+  }
 
-if( m_infoSwitch->m_TLA ) {
+
+  if( m_infoSwitch->m_TLA ) {
     m_mjj        = book(m_name, "TLA_noExtraSel/mjj", "m_{jj} [GeV]", 5000, 0, 5000);
     m_yStar      = book(m_name, "TLA_noExtraSel/yStar", "yStar", 120, -3, 3);
 
@@ -188,11 +189,17 @@ StatusCode IParticleHists::execute( const xAOD::IParticleContainer* particles, f
     jet1.SetPtEtaPhiE(particles->at(1)->pt()/1e3, particles->at(1)->eta(), particles->at(1)->phi(), particles->at(1)->e()/1e3);
 
     double thismjj = (jet0 + jet1).M();
-    double thisyStar = (jet0.Eta() - jet1.Eta())*0.5;
+    double thisyStar = (jet0.Rapidity() - jet1.Rapidity())*0.5;
     m_mjj -> Fill (thismjj, eventWeight);
     m_yStar -> Fill (thisyStar, eventWeight);
 
     // fill TLA region hists
+    unsigned long long eventNumber;
+    bool printEventNumber = true;
+    if(jet0.Pt() > 200 || jet0.Pt() < 195)
+      printEventNumber = false;
+    if(printEventNumber)
+      eventNumber = eventInfo->auxdata< unsigned long long >( "eventNumber" );
     int i = 0;
     for(auto leadPt : m_infoSwitch->m_TLA_leadPts) {
       for(auto subleadPt : m_infoSwitch->m_TLA_subleadPts) {
@@ -206,6 +213,7 @@ StatusCode IParticleHists::execute( const xAOD::IParticleContainer* particles, f
               m_regions_yStar.at(i) -> Fill(thisyStar, eventWeight);
               m_regions_Pt_lead.at(i) -> Fill(jet0.Pt(), eventWeight);
               m_regions_Pt_sublead.at(i) -> Fill(jet1.Pt(), eventWeight);
+              if(printEventNumber) std::cout << eventNumber << ": " << jet0.Pt() << " > " << leadPt << ", " << jet1.Pt() << " > " << subleadPt << ", fabs(" << thisyStar << ") < " << yStar << std::endl;
             }
             i++;
           }
@@ -218,6 +226,7 @@ StatusCode IParticleHists::execute( const xAOD::IParticleContainer* particles, f
               m_regions_yStar.at(i) -> Fill(thisyStar, eventWeight);
               m_regions_Pt_lead.at(i) -> Fill(jet0.Pt(), eventWeight);
               m_regions_Pt_sublead.at(i) -> Fill(jet1.Pt(), eventWeight);
+              if(printEventNumber) std::cout << eventNumber << ": " << jet0.Pt() << " > " << leadPt << ", " << jet1.Pt() << " > " << subleadPt << ", fabs(" << thisyStar << ") > " << yStarAnti << std::endl;
             }
             i++;
           }
