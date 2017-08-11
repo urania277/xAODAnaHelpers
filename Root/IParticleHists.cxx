@@ -195,9 +195,11 @@ StatusCode IParticleHists::execute( const xAOD::IParticleContainer* particles, f
 
     // fill TLA region hists
     unsigned long long eventNumber;
-    bool printEventNumber = true;
-    if(jet0.Pt() > 200 || jet0.Pt() < 195)
-      printEventNumber = false;
+    bool printEventNumber = false;
+    if(printEventNumber) {
+      if(jet0.Pt() > 200 || jet0.Pt() < 195)
+        printEventNumber = false;
+    }
     if(printEventNumber)
       eventNumber = eventInfo->auxdata< unsigned long long >( "eventNumber" );
     int i = 0;
